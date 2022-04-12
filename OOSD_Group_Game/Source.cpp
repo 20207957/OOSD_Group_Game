@@ -19,13 +19,13 @@ public:
     {
         cout << "gamePlayer Constructor" << endl;
         playerX = 400.0f;
-        playerY = 680.0f;
+        playerY = 600.0f;
         PlayerSpeed = 5;
         playerUp = false;
         playerLeft = false;
         playerRight = false;
     }
-    
+
     ~gamePlayer()
     {
         cout << "gamePlayer Destructor" << endl;
@@ -106,6 +106,9 @@ int main()
         sf::Event event;
         while (window.pollEvent(event))
         {
+            if (event.type == sf::Event::Closed)
+                window.close();
+
             //If key is pressed
             if (event.type == sf::Event::KeyPressed)
             {
@@ -154,7 +157,7 @@ int main()
         if (player.playerX > (int)window.getSize().x) player.playerX = window.getSize().x;
         if (player.playerY < 0) player.playerY = 0;
         if (player.playerY > (int)window.getSize().y) player.playerY = window.getSize().y;
-        if (player.playerY < 570) player.playerY = 600;
+        if (player.playerY < 550) player.playerY = 600;
 
         void gameGravityFun();
         {
