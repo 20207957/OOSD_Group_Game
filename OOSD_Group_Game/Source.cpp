@@ -8,13 +8,29 @@ using namespace std;
 //classes start
 class gamePlayer {
 public:
-    string playerName;
     float playerX;
     float playerY;
     int PlayerSpeed;
     bool playerUp;
     bool playerLeft;
     bool playerRight;
+
+    gamePlayer()
+    {
+        cout << "gamePlayer Constructor" << endl;
+        playerX = 400.0f;
+        playerY = 680.0f;
+        PlayerSpeed = 5;
+        playerUp = false;
+        playerLeft = false;
+        playerRight = false;
+    }
+    
+    ~gamePlayer()
+    {
+        cout << "gamePlayer Destructor" << endl;
+    }
+
 };
 
 class gameGravity {
@@ -24,135 +40,142 @@ public:
     float accelerationX;
     float accelerationY;
     float inGameGravity;
+
+    gameGravity()
+    {
+        cout << "gameGravity Constructor" << endl;
+        velocityX = 0;
+        velocityY = 0;
+        accelerationX = 0;
+        accelerationY = 0;
+        inGameGravity = 1;
+    }
+
+    ~gameGravity()
+    {
+        cout << "gameGravity Destructor" << endl;
+    }
 };
 
 class spritesAndTextures {
-public:
+private:
     //textures
     sf::Texture playerTex;
     sf::Texture floorTex;
+public:
     //sprites
     sf::Sprite player;
     sf::Sprite floor;
 
+    spritesAndTextures()
+    {
+        cout << "spritesAndTextures Constructor" << endl;
+
+        playerTex.loadFromFile("images/player.png");
+        floorTex.loadFromFile("images/floor.jpg");
+        player.setTexture(playerTex);
+        floor.setTexture(floorTex);
+        playerTex.setSmooth(true);
+        floorTex.setSmooth(true);
+        player.scale(2, 2);
+        floor.scale(4, 2);
+        floor.setPosition(1.0f, 775.0f);
+    }
+
+    ~spritesAndTextures()
+    {
+        cout << "spritesAndTextures Destructor" << endl;
+    }
 };
 //classes end
 
-    int main()
+int main()
+{
+    sf::RenderWindow window(sf::VideoMode(800, 800), "Game");
+
+    window.setVerticalSyncEnabled(true);
+    window.setKeyRepeatEnabled(false);
+
+    gamePlayer player;
+    spritesAndTextures sat;
+    gameGravity gravity;
+
+
+    while (window.isOpen())
     {
-        sf::RenderWindow window(sf::VideoMode(800, 800), "Game");
-
-        window.setVerticalSyncEnabled(true);
-        window.setKeyRepeatEnabled(false);
-
-        gamePlayer player;
-        ///////player.playerName
-        player.playerX = 400.0f;
-        player.playerY = 680.0f;
-        player.PlayerSpeed = 5;
-        player.playerUp = false;
-        player.playerLeft = false;
-        player.playerRight = false;
-
-        spritesAndTextures sat;
-        sat.playerTex.loadFromFile("images/player.png");
-        sat.floorTex.loadFromFile("images/floor.jpg");
-        sat.player.setTexture(sat.playerTex);
-        sat.floor.setTexture(sat.floorTex);
-        sat.playerTex.setSmooth(true);
-        sat.floorTex.setSmooth(true);
-        sat.player.scale(2, 2);
-        sat.floor.scale(4, 2);
-        sat.floor.setPosition(1.0f, 775.0f);
-
-        gameGravity gravity;
-        gravity.velocityX = 0;
-        gravity.velocityY = 0;
-        gravity.accelerationX = 0;
-        gravity.accelerationY = 0;
-        gravity.inGameGravity = 1;
-
-        while (window.isOpen())
+        sf::Event event;
+        while (window.pollEvent(event))
         {
-            sf::Event event;
-            while (window.pollEvent(event))
+            //If key is pressed
+            if (event.type == sf::Event::KeyPressed)
             {
-                //If key is pressed
-                if (event.type == sf::Event::KeyPressed)
+                switch (event.key.code)
                 {
-                    switch (event.key.code)
-                    {
-                    case sf::Keyboard::W:player.playerUp = true; break;
-                    case sf::Keyboard::A:player.playerLeft = true; break;
-                    case sf::Keyboard::D:player.playerRight = true; break;
-                    default: break;
-                    }
+                case sf::Keyboard::W:player.playerUp = true; break;
+                case sf::Keyboard::A:player.playerLeft = true; break;
+                case sf::Keyboard::D:player.playerRight = true; break;
+                default: break;
                 }
-
-                if (event.type == sf::Event::KeyReleased)
-                {
-                    switch (event.key.code)
-                    {
-                    case sf::Keyboard::W:player.playerUp = false; break;
-                    case sf::Keyboard::A:player.playerLeft = false; break;
-                    case sf::Keyboard::D:player.playerRight = false; break;
-                    default: break;
-                    }
-                }
-
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-                {
-                    sat.player.setScale(-2, 2);
-                }
-                else
-                {
-                    sat.player.setScale(2, 2);
-                }
-
-
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-                {
-                    gravity.velocityY = -10;
-                }
-
-
             }
 
-
-            //Update player
-            if (player.playerLeft) player.playerX -= player.PlayerSpeed;
-            if (player.playerRight) player.playerX += player.PlayerSpeed;
-            if (player.playerUp) player.playerY -= player.PlayerSpeed;
-
-            //Screen boundaries
-            if (player.playerX < 0) player.playerX = 0;
-            if (player.playerX > (int)window.getSize().x) player.playerX = window.getSize().x;
-            if (player.playerY < 0) player.playerY = 0;
-            if (player.playerY > (int)window.getSize().y) player.playerY = window.getSize().y;
-
-            void gameGravityFun();
+            if (event.type == sf::Event::KeyReleased)
             {
-                if (player.playerY < 680)
-                    gravity.velocityY += gravity.inGameGravity;
-                else if (player.playerY > 680)
-                    player.playerY = 680;
-
-                gravity.velocityX += gravity.accelerationX;
-                gravity.velocityY += gravity.accelerationY;
-
-                player.playerX += gravity.velocityX;
-                player.playerY += gravity.velocityY;
+                switch (event.key.code)
+                {
+                case sf::Keyboard::W:player.playerUp = false; break;
+                case sf::Keyboard::A:player.playerLeft = false; break;
+                case sf::Keyboard::D:player.playerRight = false; break;
+                default: break;
+                }
             }
 
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+            {
+                sat.player.setScale(-2, 2);
+            }
+            else
+            {
+                sat.player.setScale(2, 2);
+            }
 
-
-            //Clear window and draw new
-            window.clear();
-            sat.player.setPosition(player.playerX, player.playerY);
-            window.draw(sat.player);
-            window.draw(sat.floor);
-            window.display();
-
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+            {
+                gravity.velocityY = -10;
+            }
         }
-             return 0;
+
+        //Update player
+        if (player.playerLeft) player.playerX -= player.PlayerSpeed;
+        if (player.playerRight) player.playerX += player.PlayerSpeed;
+        if (player.playerUp) player.playerY -= player.PlayerSpeed;
+
+        //Player boundaries
+        if (player.playerX < 0) player.playerX = 0;
+        if (player.playerX > (int)window.getSize().x) player.playerX = window.getSize().x;
+        if (player.playerY < 0) player.playerY = 0;
+        if (player.playerY > (int)window.getSize().y) player.playerY = window.getSize().y;
+        if (player.playerY < 570) player.playerY = 600;
+
+        void gameGravityFun();
+        {
+            if (player.playerY < 680)
+                gravity.velocityY += gravity.inGameGravity;
+            else if (player.playerY > 680)
+                player.playerY = 680;
+
+            gravity.velocityX += gravity.accelerationX;
+            gravity.velocityY += gravity.accelerationY;
+
+            player.playerX += gravity.velocityX;
+            player.playerY += gravity.velocityY;
+        }
+
+        //Clear window and draw new
+        window.clear();
+        sat.player.setPosition(player.playerX, player.playerY);
+        window.draw(sat.player);
+        window.draw(sat.floor);
+        window.display();
     }
+    return 0;
+}
