@@ -2,18 +2,16 @@
 #include "SFML/graphics.hpp"
 #include "SFML/system.hpp"
 #include "SFML/window.hpp"
+#include <vector>
 
 using namespace std;
 
 //classes start
 class gamePlayer {
 public:
-    float playerX;
-    float playerY;
+    float playerX, playerY;
     int PlayerSpeed;
-    bool playerUp;
-    bool playerLeft;
-    bool playerRight;
+    bool playerUp, playerLeft, playerRight;
 
     gamePlayer()
     {
@@ -35,11 +33,7 @@ public:
 
 class gameGravity {
 public:
-    float velocityX;
-    float velocityY;
-    float accelerationX;
-    float accelerationY;
-    float inGameGravity;
+    float velocityX, velocityY, accelerationX, accelerationY, inGameGravity;
 
     gameGravity()
     {
@@ -61,25 +55,32 @@ class spritesAndTextures {
 private:
     //textures
     sf::Texture playerTex;
-    sf::Texture floorTex;
+    sf::Texture backgroundTex;
+    sf::Texture coinTex;
 public:
     //sprites
     sf::Sprite player;
-    sf::Sprite floor;
+    sf::Sprite background;
+    sf::Sprite coin;
 
     spritesAndTextures()
     {
         cout << "spritesAndTextures Constructor" << endl;
 
         playerTex.loadFromFile("images/player.png");
-        floorTex.loadFromFile("images/floor.jpg");
+        coinTex.loadFromFile("images/coin.png");
+        backgroundTex.loadFromFile("images/background.jpg");
+
         player.setTexture(playerTex);
-        floor.setTexture(floorTex);
+        background.setTexture(backgroundTex);
         playerTex.setSmooth(true);
-        floorTex.setSmooth(true);
+        backgroundTex.setSmooth(true);
         player.scale(2, 2);
-        floor.scale(4, 2);
-        floor.setPosition(1.0f, 775.0f);
+        background.setScale(1.0f, 1.25f);
+        background.setPosition(1.0, -40.0f);
+
+        coin.setTexture(coinTex);
+        coin.setScale(0.25f, 0.25f);
     }
 
     ~spritesAndTextures()
@@ -87,18 +88,60 @@ public:
         cout << "spritesAndTextures Destructor" << endl;
     }
 };
+
+class Coin {
+    sf::Sprite* coinSprite;
+
+public:
+    float x;
+    float y;
+    Coin(sf::Sprite* coinTex) {
+        this->coinSprite = coinTex;
+        y = 720;
+        x = rand() % 800;
+    }
+    void draw(sf::RenderWindow* window) {
+        coinSprite->setPosition(x, y);
+        window->draw(*coinSprite);
+    }
+    sf::FloatRect getRect() {
+        return coinSprite->getGlobalBounds();
+    }
+};
+
 //classes end
+
+bool isIntersects(sf::FloatRect a, sf::FloatRect b) {
+    if (a.intersects(b)) {
+        return true;
+    }
+    return false;
+}
 
 int main()
 {
+    srand(time(NULL));
     sf::RenderWindow window(sf::VideoMode(800, 800), "Game");
-
+    window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
     window.setKeyRepeatEnabled(false);
 
     gamePlayer player;
     spritesAndTextures sat;
     gameGravity gravity;
+
+    vector<Coin> coins;
+
+    sf::Font font;
+    font.loadFromFile("images/font.ttf");
+
+
+    int score = 0;
+    sf::Text scoreText;
+    scoreText.setFont(font);
+    scoreText.setPosition(30, 10);
+    scoreText.setCharacterSize(34);
+    scoreText.setFillColor(sf::Color(255, 0, 0));
 
 
     while (window.isOpen())
@@ -147,6 +190,7 @@ int main()
             }
         }
 
+
         //Update player
         if (player.playerLeft) player.playerX -= player.PlayerSpeed;
         if (player.playerRight) player.playerX += player.PlayerSpeed;
@@ -173,12 +217,33 @@ int main()
             player.playerY += gravity.velocityY;
         }
 
+        if (rand() % 30 == 1 && coins.size() < 10) {
+            coins.push_back(Coin(&sat.coin));
+        }
+
         //Clear window and draw new
         window.clear();
         sat.player.setPosition(player.playerX, player.playerY);
+        window.draw(sat.background);
         window.draw(sat.player);
-        window.draw(sat.floor);
+
+
+        scoreText.setString("Score: " + to_string(score));
+        window.draw(scoreText);
+
+        for (int i = 0; i < coins.size(); i++) {
+            coins[i].draw(&window);
+            
+            //if collide with coin
+            if (isIntersects(coins[i].getRect(), sat.player.getGlobalBounds())) {
+                coins.erase(coins.begin() + i);
+                score++;
+            }
+        }
+
         window.display();
     }
     return 0;
 }
+
+
