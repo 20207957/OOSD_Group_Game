@@ -7,13 +7,50 @@
 using namespace std;
 
 //classes start
-class gamePlayer {
+class VisualEntity //Inheritence  
+{
+public:
+    sf::Sprite Sprite;
+
+    VisualEntity(std::string textureFilename) {
+        cout << "VisualEntity Constructor (" << textureFilename << ")" << endl;
+
+        try { //Exeption Handling
+            if (_texture.loadFromFile("images/" + textureFilename)) {
+                cout << textureFilename << " loaded successfully." << endl;
+            }
+            else {
+                throw " - Sprite could not be found.";
+            }
+        }
+        catch (const char* msg) {
+            cout << textureFilename + msg << endl;
+        }
+
+        Sprite.setTexture(_texture);
+        _texture.setSmooth(true);
+    }
+
+    virtual void setupSprite() = 0; //Polymorphism
+
+    ~VisualEntity()
+    {
+        cout << "VisualEntity Destructor" << endl;
+    }
+
+private:
+    sf::Texture _texture;
+};
+
+
+class gamePlayer : public VisualEntity
+{
 public:
     float playerX, playerY;
     int PlayerSpeed;
     bool playerUp, playerLeft, playerRight;
 
-    gamePlayer()
+    gamePlayer(std::string textureFilename) : VisualEntity(textureFilename)
     {
         cout << "gamePlayer Constructor" << endl;
         playerX = 400.0f;
@@ -24,9 +61,32 @@ public:
         playerRight = false;
     }
 
+    void setupSprite() {
+        Sprite.scale(2, 2);
+    }
+
     ~gamePlayer()
     {
         cout << "gamePlayer Destructor" << endl;
+    }
+};
+
+class Background : public VisualEntity
+{
+public:
+    Background(std::string textureFilename) : VisualEntity(textureFilename)
+    {
+        cout << "Background Constructor" << endl;
+    }
+
+    void setupSprite() {
+        Sprite.setScale(1.0f, 1.25f);
+        Sprite.setPosition(1.0, -40.0f);
+    }
+
+    ~Background()
+    {
+        cout << "Background Destructor" << endl;
     }
 };
 
@@ -90,7 +150,7 @@ public:
     {
         cout << "spritesAndTextures Destructor" << endl;
     }
-};    
+};
 
 class Coin {
 public:
@@ -114,6 +174,7 @@ public:
 
 //classes end
 
+
 //player intersect
 bool isIntersects(sf::FloatRect a, sf::FloatRect b) {
     if (a.intersects(b)) {
@@ -130,10 +191,17 @@ int main()
     window.setVerticalSyncEnabled(true);
     window.setKeyRepeatEnabled(false);
 
+    //setup sprites
+    Background bg("background.jpg");
+    bg.setupSprite();
+    gamePlayer player("player.png");
+    player.setupSprite();
+
     //start classes
-    gamePlayer player;
     spritesAndTextures sat;
     gameGravity gravity;
+
+
 
     //declare vector array
     vector<Coin> coins;
@@ -249,7 +317,7 @@ int main()
 
         for (int i = 0; i < coins.size(); i++) {
             coins[i].draw(&window);
-            
+
             //if collide with coin
             if (isIntersects(coins[i].getRect(), sat.player.getGlobalBounds())) {
                 coins.erase(coins.begin() + i);
@@ -261,5 +329,4 @@ int main()
     }
     return 0;
 }
-
 
