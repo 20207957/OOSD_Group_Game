@@ -3,8 +3,13 @@
 #include "SFML/system.hpp"
 #include "SFML/window.hpp"
 #include <vector>
+#include <dos.h> 
 
+unsigned int microseconds;
 using namespace std;
+
+int plife = 3;
+int hpMax = 5;
 
 //classes start
 class VisualEntity //Inheritence  
@@ -110,6 +115,120 @@ public:
     }
 };
 
+class sfComponents
+{
+public:
+
+    //Sprites
+    sf::Sprite* heartsSprite;
+    sf::Sprite life;
+    sf::Sprite block;
+    sf::Sprite hearts;
+
+    //Textures
+    sf::Texture blockTex;
+    sf::Texture lifeTex;
+    sf::Texture heartsTex;
+
+    //Font and Text
+    sf::Font font;
+    sf::Text lifedisplay;
+
+    //TIME
+    sf::Clock clock;
+    sf::Time second = sf::seconds(35.f);
+
+};
+
+class ImgSet : public sfComponents
+{
+
+public:
+    sf::Sprite* heartsSprite;
+    int v = 0;
+
+
+
+    //Conversion int to string
+    string lstring = to_string(plife);
+
+
+    ImgSet()
+    {
+        cout << "Images Set Constructor" << endl;
+
+        //Life and Life in text
+        lifeTex.loadFromFile("images/heart.png");
+        life.setTexture(lifeTex);
+        lifeTex.setSmooth(true);
+        life.scale(0.139, 0.139);
+        life.setPosition(45, 55);
+
+
+
+        font.loadFromFile("images/font.ttf");
+        lifedisplay.setFont(font);
+        lifedisplay.setString(lstring);
+        lifedisplay.setCharacterSize(50);
+        lifedisplay.setFillColor(sf::Color::White);
+        lifedisplay.setStyle(sf::Text::Bold);
+        lifedisplay.setPosition(72.5, 65);
+
+
+        //Block
+        blockTex.loadFromFile("images/lava.png");
+        block.setTexture(blockTex);
+        blockTex.setSmooth(true);
+        block.scale(0.2, 0.2);
+        block.setPosition(500, 600);
+
+
+        //Hearts
+        heartsTex.loadFromFile("images/heart.png");
+        hearts.setTexture(heartsTex);
+        hearts.setScale(0.10f, 0.10f);
+        heartsTex.setSmooth(true);
+
+
+    }
+
+    ~ImgSet()
+    {
+
+
+
+    }
+
+};
+
+
+
+class exceptions : public sfComponents
+{
+public:
+
+
+
+    exceptions() {
+
+        int error = 404;
+
+        string x = "Locate folder .tffw";
+        try { //Exeption Handling
+            cout << "Chiecking for Exceptions..." << endl;
+
+            if (!(font.loadFromFile("images/font.ttf"))) {
+                cout << "Font loaded unsuccessfully." << endl;
+
+                throw error;
+            }
+        }
+        catch (int error) {
+            cout << "Locate folder .tff" << endl;
+        }
+    }
+};
+
 class spritesAndTextures {
 private:
     //declare textures
@@ -152,8 +271,41 @@ public:
     }
 };
 
-class Coin {
+class hearts : public sfComponents {
+
 public:
+
+    float x, y;
+
+
+
+    hearts(sf::Sprite* heartsTex) {
+        this->heartsSprite = heartsTex;
+
+        if (second > clock.getElapsedTime()) {
+            y = 700;
+            x = rand() % 800;
+            return;
+
+
+
+            clock.restart();
+        }
+
+
+    }
+    void draw(sf::RenderWindow* window) {
+        heartsSprite->setPosition(x, y);
+        window->draw(*heartsSprite);
+
+    }
+    sf::FloatRect getRect() {
+        return heartsSprite->getGlobalBounds();
+    }
+};
+
+class Coin {
+private:
     sf::Sprite* coinSprite;
 
 public:
@@ -170,12 +322,9 @@ public:
     sf::FloatRect getRect() {
         return coinSprite->getGlobalBounds();
     }
-};
+}; //classes end
 
-//classes end
-
-
-//player intersect
+//player intersect coins
 bool isIntersects(sf::FloatRect a, sf::FloatRect b) {
     if (a.intersects(b)) {
         return true;
@@ -183,10 +332,20 @@ bool isIntersects(sf::FloatRect a, sf::FloatRect b) {
     return false;
 }
 
+//player intersect blocks
+bool collide(sf::FloatRect c, sf::FloatRect d) {
+
+    if (c.intersects(d)) {
+        return true;
+    }
+    return false;
+}
+
 int main()
 {
-    srand(time(NULL));
+    
     sf::RenderWindow window(sf::VideoMode(800, 800), "Game");
+    srand(time(NULL));
     window.setFramerateLimit(60);
     window.setVerticalSyncEnabled(true);
     window.setKeyRepeatEnabled(false);
@@ -200,15 +359,16 @@ int main()
     //start classes
     spritesAndTextures sat;
     gameGravity gravity;
+    ImgSet hp;
 
-
-
-    //declare vector array
+    //declare vector arrays
     vector<Coin> coins;
+    vector<hearts> life;
 
     //load font
     sf::Font font;
     font.loadFromFile("images/font.ttf");
+    cout << "Font Loaded" << endl;
 
     //score
     int score = 0;
@@ -300,16 +460,53 @@ int main()
             player.playerY += gravity.velocityY;
         }
 
+        //Collision with blocks
+        if (hp.block.getGlobalBounds().intersects(sat.player.getGlobalBounds()))
+        {
+            cout << "Collision" << endl;
+            plife--;
+            hp.block.setScale(0, 0);
+            cout << plife << endl;
+
+            hp.lifedisplay.setString(to_string(plife));
+
+            string lstring = to_string(plife);
+            window.draw(hp.lifedisplay);
+        }
+
         //random number generator - +1 to vector
         if (rand() % 30 == 1 && coins.size() < 10) {
             coins.push_back(Coin(&sat.coin));
         }
 
+        //random Hearts
+        if (plife < hpMax) {
+            sf::Clock clock;
+            sf::Time second = sf::seconds(1.0f);
+            sf::Time t2 = clock.restart();
+
+            if (clock.getElapsedTime() > clock.getElapsedTime()) {
+
+
+                if (rand() % 30 == 1 && life.size() < 1) {
+                    life.push_back(hearts(&hp.hearts));
+
+
+                    t2;
+                }
+
+            }
+        }
+        
         //Clear window and draw new
         window.clear();
         sat.player.setPosition(player.playerX, player.playerY);
         window.draw(sat.background);
+        hp.block.setPosition(500, 600);
         window.draw(sat.player);
+        window.draw(hp.life);
+        window.draw(hp.lifedisplay);
+        window.draw(hp.block);
 
         //show score
         scoreText.setString("Score: " + to_string(score));
@@ -322,6 +519,24 @@ int main()
             if (isIntersects(coins[i].getRect(), sat.player.getGlobalBounds())) {
                 coins.erase(coins.begin() + i);
                 score++;
+            }
+        }
+        
+        for (int j = 0; j < life.size(); j++) {
+            life[j].draw(&window);
+
+            //if collide with  hearts
+            if (isIntersects(life[j].getRect(), sat.player.getGlobalBounds())) {
+                life.erase(life.begin() + j);
+                plife++;
+
+                hp.lifedisplay.setString(to_string(plife));
+
+                string lstring = to_string(plife);
+                window.draw(hp.lifedisplay);
+
+                cout << "life up" << endl;
+                cout << plife << endl;
             }
         }
 
